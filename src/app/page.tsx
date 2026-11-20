@@ -28,6 +28,7 @@ import SearchableSelect, {
   CatalogSearchBox,
 } from "@/components/SearchableSelect";
 import * as db from "@/lib/supabaseService";
+import * as XLSX from "xlsx";
 import {
   Activity,
   AlertCircle,
@@ -417,43 +418,434 @@ export default function ProlavtexDispatchApp() {
     setDispatcherCatalog(updated);
   };
 
-  // CSV Template Download Helper for "Plantilla" button
+  // Excel / CSV Template Download Helper for "Plantilla" button
   const handleDownloadCSVTemplate = (
     type: "clientes" | "procesos" | "manualidades" | "prendas" | "encargados"
   ) => {
-    let csvContent = "";
+    let sheetName = "";
     let filename = "";
+    let headers: string[] = [];
+    let rows: (string | number)[][] = [];
+    let colWidths: { wch: number }[] = [];
+
     if (type === "clientes") {
-      csvContent =
-        "NOMBRE_RAZON_SOCIAL,RUC_CEDULA,TELEFONO,DIRECCION\nCONFECCIONES EJEMPLO S.A.,1790012345001,0991234567,Parque Industrial Norte\n";
-      filename = "plantilla_clientes_prolavtex.csv";
+      sheetName = "Clientes";
+      filename = "Plantilla_Clientes.xlsx";
+      headers = ["Nombre", "Email", "Telefono", "Direccion", "Estado"];
+      rows = [
+        [
+          "Cliente Ejemplo S.A.",
+          "contacto@cliente.com",
+          "+54 11 1234-5678",
+          "Av. Siempre Viva 123",
+          "Activo",
+        ],
+        [
+          "Confecciones Denim Andino S.A.S.",
+          "pedidos@denimandino.com",
+          "+593 99 812 3456",
+          "Av. Galo Plaza Lasso N52-18",
+          "Activo",
+        ],
+        [
+          "Textiles & Moda Kronos Cia. Ltda.",
+          "ventas@kronos.com",
+          "+593 98 765 4321",
+          "Zona Industrial Pelileo Km 2",
+          "Activo",
+        ],
+      ];
+      colWidths = [
+        { wch: 35 },
+        { wch: 28 },
+        { wch: 20 },
+        { wch: 32 },
+        { wch: 12 },
+      ];
     } else if (type === "procesos") {
-      csvContent =
-        "PROCESO,CATEGORIA,TIPO_PRENDA,DESCRIPCION\nLavado Enzimático,LAVADO,Pantalón Jean Caballero,Biopulido con celulasa ácida\n";
-      filename = "plantilla_procesos_despacho.csv";
+      sheetName = "Procesos";
+      filename = "Plantilla_Procesos.xlsx";
+      headers = ["Nombre", "Categoria", "Tipo_Prenda", "Descripcion", "Estado"];
+      rows = [
+        [
+          "Lavado Enzimático",
+          "LAVADO",
+          "Pantalón Jean Caballero",
+          "Bio-pulido y desgaste controlado en prenda de mezclilla",
+          "Activo",
+        ],
+        [
+          "Deslavado (Stone Wash)",
+          "LAVADO PESADO",
+          "Chaqueta Denim (Trucker)",
+          "Abrasión física en tambor industrial para efecto vintage",
+          "Activo",
+        ],
+        [
+          "Neutralizado",
+          "QUÍMICO",
+          "Todas las Prendas Denim",
+          "Eliminación de residuales oxidantes y estabilización de pH",
+          "Activo",
+        ],
+        [
+          "Suavizado Siliconado",
+          "ACABADO",
+          "Pantalón Jean Dama",
+          "Aplicación de micro-emulsión para tacto extra suave",
+          "Activo",
+        ],
+      ];
+      colWidths = [
+        { wch: 28 },
+        { wch: 18 },
+        { wch: 26 },
+        { wch: 45 },
+        { wch: 12 },
+      ];
     } else if (type === "manualidades") {
-      csvContent =
-        "MANUALIDAD,CATEGORIA,TIPO_PRENDA,TECNICA\nBigotes (Whiskers),MANUALIDAD SECO,Pantalón Jean Caballero,Marcado artesanal con lija grano 220\n";
-      filename = "plantilla_manualidades_prolavtex.csv";
+      sheetName = "Manualidades";
+      filename = "Plantilla_Manualidades.xlsx";
+      headers = ["Nombre", "Categoria", "Tipo_Prenda", "Descripcion", "Estado"];
+      rows = [
+        [
+          "Bigotes (Whiskers)",
+          "MANUALIDAD SECO",
+          "Pantalón Jean Caballero",
+          "Marcado con molde polimérico y lija grano 220",
+          "Activo",
+        ],
+        [
+          "Lijado Localizado",
+          "MANUALIDAD SECO",
+          "Pantalón Jean Dama",
+          "Desgaste manual en muslos con maniquí neumático",
+          "Activo",
+        ],
+        [
+          "Roturas / Grinding",
+          "DESGASTE",
+          "Short de Mezclilla",
+          "Esmerilado artesanal en bordes de bolsillos y bota",
+          "Activo",
+        ],
+        [
+          "Focalizado (Spray PP)",
+          "QUÍMICO LOCAL",
+          "Pantalón Jean Caballero",
+          "Nebulización localizada en cabina para reserva de luz",
+          "Activo",
+        ],
+      ];
+      colWidths = [
+        { wch: 28 },
+        { wch: 20 },
+        { wch: 26 },
+        { wch: 45 },
+        { wch: 12 },
+      ];
     } else if (type === "encargados") {
-      csvContent =
-        "NOMBRE_ENCARGADO,CARGO_AREA,TELEFONO\nCARLOS URIÑA,BODEGUERO,0991234501\n";
-      filename = "plantilla_encargados_prolavtex.csv";
+      sheetName = "Encargados";
+      filename = "Plantilla_Encargados.xlsx";
+      headers = ["Nombre", "Cargo", "Telefono", "Email", "Estado"];
+      rows = [
+        [
+          "ENCARGADO PLANTA",
+          "BODEGUERO",
+          "+593 99 123 4501",
+          "bodega@prolavtex.com",
+          "Activo",
+        ],
+        [
+          "SUPERVISOR DE TURNO",
+          "FROSTEADOR",
+          "+593 99 123 4502",
+          "turno@prolavtex.com",
+          "Activo",
+        ],
+        [
+          "OPERADOR DE SECADO",
+          "SECADOR",
+          "+593 99 123 4504",
+          "secado@prolavtex.com",
+          "Activo",
+        ],
+      ];
+      colWidths = [
+        { wch: 28 },
+        { wch: 20 },
+        { wch: 20 },
+        { wch: 26 },
+        { wch: 12 },
+      ];
     } else {
-      csvContent =
-        "TIPO_PRENDA,CATEGORIA,TEJIDO_BASE,DESCRIPCION\nPantalón Jean Caballero,DENIM CABALLERO,Denim Índigo 12 oz,Corte clásico 5 bolsillos\n";
-      filename = "plantilla_tipos_prenda_prolavtex.csv";
+      sheetName = "Prendas";
+      filename = "Plantilla_Tipos_Prenda.xlsx";
+      headers = ["Nombre", "Categoria", "Tejido_Base", "Descripcion", "Estado"];
+      rows = [
+        [
+          "Pantalón Jean Caballero",
+          "DENIM PESADO",
+          "Mezclilla Índigo 12oz - 14oz",
+          "Corte clásico 5 bolsillos corte recto",
+          "Activo",
+        ],
+        [
+          "Pantalón Jean Dama",
+          "DENIM STRETCH",
+          "Mezclilla Stretch 9oz - 11oz",
+          "Mezclilla con elastano corte skinny",
+          "Activo",
+        ],
+        [
+          "Chaqueta Denim (Trucker)",
+          "DENIM SUPERIOR",
+          "Mezclilla Rígida 13oz",
+          "Casaca clásica estructurada con botones metálicos",
+          "Activo",
+        ],
+        [
+          "Short de Mezclilla",
+          "DENIM VERANO",
+          "Mezclilla Algodón 10oz",
+          "Bermuda y short denim dama y caballero",
+          "Activo",
+        ],
+      ];
+      colWidths = [
+        { wch: 28 },
+        { wch: 18 },
+        { wch: 28 },
+        { wch: 42 },
+        { wch: 12 },
+      ];
     }
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const wb = XLSX.utils.book_new();
+    const wsData = [headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws["!cols"] = colWidths;
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", filename);
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    triggerToast(`Plantilla "${filename}" descargada.`);
+    URL.revokeObjectURL(url);
+    triggerToast(`Plantilla Excel "${filename}" descargada con formato de tabla.`);
+  };
+
+  // Excel / CSV Import Helper for "Cargar Excel" button
+  const handleImportCSVFile = async (
+    type: "clientes" | "procesos" | "manualidades" | "prendas" | "encargados",
+    file?: File | null
+  ) => {
+    if (!file) return;
+    try {
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type: "array" });
+      const firstSheetName = wb.SheetNames[0];
+      if (!firstSheetName) {
+        triggerToast("El archivo no contiene ninguna hoja de cálculo.");
+        return;
+      }
+      const worksheet = wb.Sheets[firstSheetName];
+      const rawRows: any[][] = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        defval: "",
+      });
+
+      const validRows = rawRows.filter(
+        (r) => Array.isArray(r) && r.some((c) => String(c).trim().length > 0)
+      );
+
+      if (validRows.length < 2) {
+        triggerToast("El archivo no contiene filas con datos.");
+        return;
+      }
+
+      const headers = validRows[0].map((h: any) =>
+        String(h || "").trim().toLowerCase()
+      );
+      const dataRows = validRows.slice(1);
+      let importedCount = 0;
+      setIsSaving(true);
+
+      if (type === "clientes") {
+        const nameIdx = headers.findIndex((h: string) => h.includes("nombre"));
+        const telIdx = headers.findIndex((h: string) => h.includes("tel"));
+        const dirIdx = headers.findIndex((h: string) => h.includes("dir"));
+        const rucIdx = headers.findIndex(
+          (h: string) => h.includes("ruc") || h.includes("cedula")
+        );
+        const emailIdx = headers.findIndex((h: string) => h.includes("email"));
+
+        for (let idx = 0; idx < dataRows.length; idx++) {
+          const cols = dataRows[idx].map((c: any) => String(c || "").trim());
+          const nombre = nameIdx >= 0 ? cols[nameIdx] : cols[0];
+          if (!nombre) continue;
+          const rucCedula =
+            rucIdx >= 0 && cols[rucIdx]
+              ? cols[rucIdx]
+              : `CLI-${Date.now().toString().slice(-6)}-${idx + 1}`;
+          const telefono =
+            telIdx >= 0 && cols[telIdx] ? cols[telIdx] : "S/N";
+          const direccion =
+            dirIdx >= 0 && cols[dirIdx]
+              ? cols[dirIdx]
+              : emailIdx >= 0 && cols[emailIdx]
+              ? `Email: ${cols[emailIdx]}`
+              : "Ciudad";
+
+          const created = await db.createClient({
+            nombre,
+            rucCedula,
+            telefono,
+            direccion,
+          });
+          setClients((prev) => [created, ...prev]);
+          importedCount++;
+        }
+      } else if (type === "procesos") {
+        const nameIdx = headers.findIndex(
+          (h: string) => h.includes("nombre") || h.includes("proceso")
+        );
+        const catIdx = headers.findIndex((h: string) => h.includes("cat"));
+        const prendaIdx = headers.findIndex((h: string) => h.includes("prenda"));
+        const descIdx = headers.findIndex((h: string) => h.includes("desc"));
+
+        for (const row of dataRows) {
+          const cols = row.map((c: any) => String(c || "").trim());
+          const label = nameIdx >= 0 ? cols[nameIdx] : cols[0];
+          if (!label) continue;
+          const category =
+            catIdx >= 0 && cols[catIdx] ? cols[catIdx] : "LAVADO";
+          const tipoPrenda =
+            prendaIdx >= 0 && cols[prendaIdx]
+              ? cols[prendaIdx]
+              : "Pantalón Jean Caballero";
+          const description =
+            descIdx >= 0 && cols[descIdx]
+              ? cols[descIdx]
+              : "Proceso industrial";
+
+          const created = await db.createProcess({
+            label,
+            category,
+            tipoPrenda,
+            description,
+          });
+          setProcessCatalog((prev) => [created, ...prev]);
+          importedCount++;
+        }
+      } else if (type === "manualidades") {
+        const nameIdx = headers.findIndex(
+          (h: string) => h.includes("nombre") || h.includes("manualidad")
+        );
+        const catIdx = headers.findIndex((h: string) => h.includes("cat"));
+        const prendaIdx = headers.findIndex((h: string) => h.includes("prenda"));
+        const descIdx = headers.findIndex(
+          (h: string) => h.includes("desc") || h.includes("tec")
+        );
+
+        for (const row of dataRows) {
+          const cols = row.map((c: any) => String(c || "").trim());
+          const label = nameIdx >= 0 ? cols[nameIdx] : cols[0];
+          if (!label) continue;
+          const category =
+            catIdx >= 0 && cols[catIdx] ? cols[catIdx] : "MANUALIDAD SECO";
+          const tipoPrenda =
+            prendaIdx >= 0 && cols[prendaIdx]
+              ? cols[prendaIdx]
+              : "Pantalón Jean Caballero";
+          const technique =
+            descIdx >= 0 && cols[descIdx] ? cols[descIdx] : "Acabado artesanal";
+
+          const created = await db.createFinish({
+            label,
+            category,
+            tipoPrenda,
+            technique,
+          });
+          setFinishCatalog((prev) => [created, ...prev]);
+          importedCount++;
+        }
+      } else if (type === "prendas") {
+        const nameIdx = headers.findIndex(
+          (h: string) => h.includes("nombre") || h.includes("prenda")
+        );
+        const catIdx = headers.findIndex((h: string) => h.includes("cat"));
+        const fabricIdx = headers.findIndex(
+          (h: string) => h.includes("tejido") || h.includes("fabric")
+        );
+        const descIdx = headers.findIndex((h: string) => h.includes("desc"));
+
+        for (const row of dataRows) {
+          const cols = row.map((c: any) => String(c || "").trim());
+          const label = nameIdx >= 0 ? cols[nameIdx] : cols[0];
+          if (!label) continue;
+          const category =
+            catIdx >= 0 && cols[catIdx] ? cols[catIdx] : "DENIM CABALLERO";
+          const fabric =
+            fabricIdx >= 0 && cols[fabricIdx]
+              ? cols[fabricIdx]
+              : "Mezclilla Índigo 100% Algodón";
+          const description =
+            descIdx >= 0 && cols[descIdx]
+              ? cols[descIdx]
+              : "Prenda registrada";
+
+          const created = await db.createGarmentType({
+            label,
+            category,
+            fabric,
+            description,
+          });
+          setGarmentCatalog((prev) => [created, ...prev]);
+          importedCount++;
+        }
+      } else if (type === "encargados") {
+        const nameIdx = headers.findIndex((h: string) => h.includes("nombre"));
+        const cargoIdx = headers.findIndex((h: string) => h.includes("cargo"));
+        const telIdx = headers.findIndex((h: string) => h.includes("tel"));
+
+        for (const row of dataRows) {
+          const cols = row.map((c: any) => String(c || "").trim());
+          const nombre = nameIdx >= 0 ? cols[nameIdx] : cols[0];
+          if (!nombre) continue;
+          const cargo =
+            cargoIdx >= 0 && cols[cargoIdx] ? cols[cargoIdx] : "BODEGUERO";
+          const telefono =
+            telIdx >= 0 && cols[telIdx] ? cols[telIdx] : "S/N";
+
+          const created = await db.createDispatcher({
+            nombre,
+            cargo,
+            telefono,
+          });
+          setDispatcherCatalog((prev) => [created, ...prev]);
+          importedCount++;
+        }
+      }
+
+      triggerToast(
+        `${importedCount} registros importados y sincronizados con Supabase.`
+      );
+    } catch (err: any) {
+      console.error(err);
+      triggerToast(
+        "Error al importar archivo: " + (err.message || "Formato incorrecto")
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // =========================================================================
@@ -3790,10 +4182,10 @@ export default function ProlavtexDispatchApp() {
                       accept=".csv,.xlsx,.xls"
                       className="hidden"
                       onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          triggerToast(
-                            `Archivo "${e.target.files[0].name}" cargado en Procesos.`
-                          );
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImportCSVFile("procesos", file);
+                          e.target.value = "";
                         }
                       }}
                     />
@@ -3993,10 +4385,10 @@ export default function ProlavtexDispatchApp() {
                       accept=".csv,.xlsx,.xls"
                       className="hidden"
                       onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          triggerToast(
-                            `Archivo "${e.target.files[0].name}" cargado en Manualidades.`
-                          );
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImportCSVFile("manualidades", file);
+                          e.target.value = "";
                         }
                       }}
                     />
@@ -4196,10 +4588,10 @@ export default function ProlavtexDispatchApp() {
                       accept=".csv,.xlsx,.xls"
                       className="hidden"
                       onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          triggerToast(
-                            `Archivo "${e.target.files[0].name}" cargado en Tipos de Prenda.`
-                          );
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImportCSVFile("prendas", file);
+                          e.target.value = "";
                         }
                       }}
                     />
@@ -4398,10 +4790,10 @@ export default function ProlavtexDispatchApp() {
                       accept=".csv,.xlsx,.xls"
                       className="hidden"
                       onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          triggerToast(
-                            `Archivo "${e.target.files[0].name}" cargado en Encargados.`
-                          );
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImportCSVFile("encargados", file);
+                          e.target.value = "";
                         }
                       }}
                     />
@@ -4592,10 +4984,10 @@ export default function ProlavtexDispatchApp() {
                       accept=".csv,.xlsx,.xls"
                       className="hidden"
                       onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          triggerToast(
-                            `Archivo "${e.target.files[0].name}" cargado en Cartera de Clientes.`
-                          );
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImportCSVFile("clientes", file);
+                          e.target.value = "";
                         }
                       }}
                     />
