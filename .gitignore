@@ -1,0 +1,8 @@
+# Dependencias y compilación de Next.js
+/node_modules
+/.next/
+/out/
+
+# Variables de entorno locales (no subir a GitHub)
+.env*.local
+.env.local
