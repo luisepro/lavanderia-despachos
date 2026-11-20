@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",
-    "google-antigravity": "file:../../../../AppData/Local/Programs/Antigravity IDE/resources/app/extensions/agy",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.460.0",
