@@ -20,15 +20,17 @@ DROP TABLE IF EXISTS company_info CASCADE;
 -- 3. CREACIÓN DE TABLAS
 -- =============================================================================
 
--- Tabla: Datos de la Empresa (Membrete / Encabezado)
+-- Tabla: Datos de la Empresa (Membrete / Encabezado / Settings)
 CREATE TABLE company_info (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nombre TEXT NOT NULL DEFAULT 'PROLAVTEX',
+    subtitulo TEXT DEFAULT '',
     ruc TEXT DEFAULT '',
     direccion TEXT DEFAULT '',
     telefono TEXT DEFAULT '',
     email TEXT DEFAULT '',
     ciudad TEXT DEFAULT '',
+    planta TEXT DEFAULT '',
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -94,6 +96,10 @@ CREATE TABLE dispatch_orders (
     cliente_telefono TEXT DEFAULT '',
     cliente_direccion TEXT DEFAULT '',
     observaciones TEXT DEFAULT '',
+    peso_kg NUMERIC,
+    orden_recepcion TEXT,
+    maquinaria TEXT,
+    incluir_costos BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 

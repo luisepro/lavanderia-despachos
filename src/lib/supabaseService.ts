@@ -535,24 +535,46 @@ export async function updateCompanyInfo(info: CompanyInfo): Promise<CompanyInfo>
     .limit(1)
     .maybeSingle();
 
-  const payload = {
-    nombre: info.nombre,
-    subtitulo: info.subtitulo,
-    ruc: info.ruc,
-    direccion: info.direccion,
-    telefono: info.telefono,
-    email: info.email,
-    planta: info.planta,
+  const fullPayload: Record<string, any> = {
+    nombre: info.nombre || "PROLAVTEX",
+    ruc: info.ruc || "",
+    direccion: info.direccion || "",
+    telefono: info.telefono || "",
+    email: info.email || "",
+    subtitulo: info.subtitulo || "",
+    planta: info.planta || "",
+  };
+
+  const basePayload: Record<string, any> = {
+    nombre: info.nombre || "PROLAVTEX",
+    ruc: info.ruc || "",
+    direccion: info.direccion || "",
+    telefono: info.telefono || "",
+    email: info.email || "",
   };
 
   if (existing?.id) {
-    const { error } = await supabase
+    let { error } = await supabase
       .from("company_info")
-      .update(payload)
+      .update(fullPayload)
       .eq("id", existing.id);
+
+    if (error && (error.message?.includes("column") || error.code === "PGRST204")) {
+      console.warn("Columna no encontrada en company_info, guardando esquema base...");
+      const res = await supabase
+        .from("company_info")
+        .update(basePayload)
+        .eq("id", existing.id);
+      error = res.error;
+    }
     if (error) throw error;
   } else {
-    const { error } = await supabase.from("company_info").insert([payload]);
+    let { error } = await supabase.from("company_info").insert([fullPayload]);
+    if (error && (error.message?.includes("column") || error.code === "PGRST204")) {
+      console.warn("Columna no encontrada en company_info, guardando esquema base...");
+      const res = await supabase.from("company_info").insert([basePayload]);
+      error = res.error;
+    }
     if (error) throw error;
   }
 
@@ -620,7 +642,7 @@ export async function saveOrder(order: DispatchOrder): Promise<DispatchOrder> {
   const orderUUID = ensureUUID(order.id);
   const clienteId = isUUID(order.cliente?.id) ? order.cliente.id : null;
 
-  const orderPayload = {
+  const baseOrderPayload: Record<string, any> = {
     id: orderUUID,
     numero_orden: order.numeroOrden,
     fecha: order.fecha,
@@ -632,17 +654,37 @@ export async function saveOrder(order: DispatchOrder): Promise<DispatchOrder> {
     cliente_telefono: order.cliente?.telefono || "",
     cliente_direccion: order.cliente?.direccion || "",
     observaciones: order.observaciones || "",
-    peso_kg: order.pesoKg !== undefined && order.pesoKg !== "" ? Number(order.pesoKg) : null,
+  };
+
+  const extendedPayload: Record<string, any> = {
+    ...baseOrderPayload,
+    peso_kg:
+      order.pesoKg !== undefined && order.pesoKg !== ""
+        ? Number(order.pesoKg)
+        : null,
     orden_recepcion: order.ordenRecepcion || null,
     maquinaria: order.maquinaria || null,
     incluir_costos: Boolean(order.incluirCostos),
-    creado_en: order.creadoEn || new Date().toISOString(),
   };
 
-  // Upsert order
-  const { error: orderError } = await supabase
+  // Upsert order: try extended columns first, fallback to base columns if columns not in schema
+  let { error: orderError } = await supabase
     .from("dispatch_orders")
-    .upsert(orderPayload, { onConflict: "id" });
+    .upsert(extendedPayload, { onConflict: "id" });
+
+  if (
+    orderError &&
+    (orderError.message?.includes("column") || orderError.code === "PGRST204")
+  ) {
+    console.warn(
+      "Columna adicional no encontrada en dispatch_orders, guardando esquema base...",
+      orderError.message
+    );
+    const retry = await supabase
+      .from("dispatch_orders")
+      .upsert(baseOrderPayload, { onConflict: "id" });
+    orderError = retry.error;
+  }
 
   if (orderError) {
     console.error("Error al guardar orden en Supabase:", orderError);
@@ -656,7 +698,10 @@ export async function saveOrder(order: DispatchOrder): Promise<DispatchOrder> {
     .eq("order_id", orderUUID);
 
   if (deleteError) {
-    console.error("Error al sincronizar lotes de orden en Supabase:", deleteError);
+    console.error(
+      "Error al sincronizar lotes de orden en Supabase:",
+      deleteError
+    );
     throw deleteError;
   }
 
@@ -664,7 +709,7 @@ export async function saveOrder(order: DispatchOrder): Promise<DispatchOrder> {
     const itemsPayload = order.items.map((item) => ({
       id: ensureUUID(item.id),
       order_id: orderUUID,
-      tipo_prenda: item.tipoPrenda || "Pantalón Jean Caballero",
+      tipo_prenda: item.tipoPrenda || "GENERAL",
       cantidad: Number(item.cantidad) || 0,
       lote: item.lote || "",
       procesos: Array.isArray(item.procesos) ? item.procesos : [],
