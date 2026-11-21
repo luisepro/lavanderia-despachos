@@ -12,16 +12,8 @@ import {
   IndustrialProcessCatalogItem,
 } from "@/types/dispatch";
 import {
-  ARTISAN_FINISHES,
   DEFAULT_COMPANY_INFO,
   GARMENT_COLORS,
-  GARMENT_TYPES,
-  INDUSTRIAL_PROCESSES,
-  INITIAL_CLIENTS,
-  INITIAL_DISPATCHERS,
-  INITIAL_GARMENT_TYPES,
-  INITIAL_ORDERS_HISTORY,
-  SAMPLE_DISPATCH_ORDER,
 } from "@/data/catalogs";
 import ReceiptA4View from "@/components/ReceiptA4View";
 import SearchableSelect, {
@@ -122,10 +114,10 @@ function getInitialBlankOrder(seq = 1): DispatchOrder {
     items: [
       {
         id: db.ensureUUID(),
-        tipoPrenda: "Pantalón Jean Caballero",
+        tipoPrenda: "",
         cantidad: 0,
         lote: "LT-01",
-        procesos: ["Lavado Enzimático"],
+        procesos: [],
         manualidades: [],
       },
     ],
@@ -155,15 +147,15 @@ export default function ProlavtexDispatchApp() {
   // Company Configuration
   const [company, setCompany] = useState<CompanyInfo>(DEFAULT_COMPANY_INFO);
 
-  // Dynamic Catalogs for Procesos para Despacho, Manualidades & Tipos de Prenda
+  // Dynamic Catalogs for Procesos para Despacho, Manualidades & Tipos de Prenda (Inician en blanco)
   const [processCatalog, setProcessCatalog] =
-    useState<IndustrialProcessCatalogItem[]>(INDUSTRIAL_PROCESSES);
+    useState<IndustrialProcessCatalogItem[]>([]);
   const [finishCatalog, setFinishCatalog] =
-    useState<ArtisanFinishCatalogItem[]>(ARTISAN_FINISHES);
+    useState<ArtisanFinishCatalogItem[]>([]);
   const [garmentCatalog, setGarmentCatalog] =
-    useState<GarmentTypeCatalogItem[]>(INITIAL_GARMENT_TYPES);
+    useState<GarmentTypeCatalogItem[]>([]);
   const [dispatcherCatalog, setDispatcherCatalog] =
-    useState<DispatcherCatalogItem[]>(INITIAL_DISPATCHERS);
+    useState<DispatcherCatalogItem[]>([]);
 
   // Modal / Form states for adding/editing in Procesos Despacho, Manualidades, Tipos de Prenda, Encargados, and Clientes
   const [showNewDispatcherForm, setShowNewDispatcherForm] =
@@ -181,7 +173,7 @@ export default function ProlavtexDispatchApp() {
   const [newProcessForm, setNewProcessForm] = useState({
     label: "",
     category: "LAVADO",
-    tipoPrenda: "Pantalón Jean Caballero",
+    tipoPrenda: "",
     description: "",
   });
 
@@ -190,7 +182,7 @@ export default function ProlavtexDispatchApp() {
   const [newFinishForm, setNewFinishForm] = useState({
     label: "",
     category: "MANUALIDAD SECO",
-    tipoPrenda: "Pantalón Jean Caballero",
+    tipoPrenda: "",
     technique: "",
   });
 
@@ -198,13 +190,13 @@ export default function ProlavtexDispatchApp() {
   const [editingGarmentId, setEditingGarmentId] = useState<string | null>(null);
   const [newGarmentForm, setNewGarmentForm] = useState({
     label: "",
-    category: "DENIM CABALLERO",
-    fabric: "Mezclilla Índigo 100% Algodón",
+    category: "DENIM",
+    fabric: "",
     description: "",
   });
 
-  // Clients State & Form
-  const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
+  // Clients State & Form (Inicia en blanco)
+  const [clients, setClients] = useState<Client[]>([]);
   const [clientSearch, setClientSearch] = useState<string>("");
   const [isCreatingClient, setIsCreatingClient] = useState<boolean>(false);
   const [showClientModalInDirectory, setShowClientModalInDirectory] =
@@ -330,7 +322,7 @@ export default function ProlavtexDispatchApp() {
         setSupabaseStatus("connected");
         setSupabaseErrorDetails(null);
 
-        if (clientsRes && clientsRes.length > 0) setClients(clientsRes);
+        if (clientsRes !== null) setClients(clientsRes);
         if (ordersRes !== null) {
           setSavedOrders(ordersRes);
           let maxSeq = 0;
@@ -343,25 +335,17 @@ export default function ProlavtexDispatchApp() {
           setCurrentOrder((prev) => ({
             ...prev,
             numeroOrden: formatOrderNumberWithDate(prev.fecha, nextSeq),
-            despachadoPor: prev.despachadoPor === "CARLOS URIÑA" ? "ENCARGADO" : (prev.despachadoPor || "ENCARGADO"),
+            despachadoPor:
+              prev.despachadoPor === "CARLOS URIÑA"
+                ? "ENCARGADO"
+                : prev.despachadoPor || "ENCARGADO",
           }));
         }
         if (companyRes) setCompany(companyRes);
-        if (procsRes && procsRes.length > 0) setProcessCatalog(procsRes);
-        if (finishesRes && finishesRes.length > 0) setFinishCatalog(finishesRes);
-        if (garmentsRes && garmentsRes.length > 0) setGarmentCatalog(garmentsRes);
-        if (dispatchersRes && dispatchersRes.length > 0)
-          setDispatcherCatalog(dispatchersRes);
-
-        // Auto-seed if tables exist but are empty (solo catálogos y clientes, sin órdenes falsas)
-        if (!clientsRes || clientsRes.length === 0) {
-          const seeded = await db.seedInitialDataIfEmpty();
-          if (seeded) {
-            triggerToast("Catálogos iniciales cargados en Supabase.");
-            const newC = await db.getClients().catch(() => []);
-            if (newC.length > 0) setClients(newC);
-          }
-        }
+        if (procsRes !== null) setProcessCatalog(procsRes);
+        if (finishesRes !== null) setFinishCatalog(finishesRes);
+        if (garmentsRes !== null) setGarmentCatalog(garmentsRes);
+        if (dispatchersRes !== null) setDispatcherCatalog(dispatchersRes);
 
         if (notify) triggerToast("Datos actualizados desde Supabase.");
       } else {
@@ -1064,8 +1048,7 @@ export default function ProlavtexDispatchApp() {
         const updated = await db.updateProcess(editingProcessId, {
           label: newProcessForm.label.trim(),
           category: newProcessForm.category.trim().toUpperCase() || "LAVADO",
-          tipoPrenda:
-            newProcessForm.tipoPrenda.trim() || "Pantalón Jean Caballero",
+          tipoPrenda: newProcessForm.tipoPrenda.trim(),
           description:
             newProcessForm.description.trim() || "Proceso industrial",
         });
@@ -1077,11 +1060,10 @@ export default function ProlavtexDispatchApp() {
         const created = await db.createProcess({
           label: newProcessForm.label.trim(),
           category: newProcessForm.category.trim().toUpperCase() || "LAVADO",
-          tipoPrenda:
-            newProcessForm.tipoPrenda.trim() || "Pantalón Jean Caballero",
+          tipoPrenda: newProcessForm.tipoPrenda.trim(),
           description:
             newProcessForm.description.trim() ||
-            "Proceso industrial configurado para planta Prolavtex",
+            "Proceso industrial configurado",
         });
         setProcessCatalog((prev) => [created, ...prev]);
         triggerToast(`Proceso "${created.label}" añadido a Supabase.`);
@@ -1090,7 +1072,7 @@ export default function ProlavtexDispatchApp() {
       setNewProcessForm({
         label: "",
         category: "LAVADO",
-        tipoPrenda: "Pantalón Jean Caballero",
+        tipoPrenda: "",
         description: "",
       });
       setEditingProcessId(null);
@@ -1108,7 +1090,7 @@ export default function ProlavtexDispatchApp() {
     setNewProcessForm({
       label: proc.label,
       category: proc.category,
-      tipoPrenda: proc.tipoPrenda || "Pantalón Jean Caballero",
+      tipoPrenda: proc.tipoPrenda || "",
       description: proc.description || "",
     });
     setShowNewProcessForm(true);
@@ -1141,11 +1123,10 @@ export default function ProlavtexDispatchApp() {
           category:
             newFinishForm.category.trim().toUpperCase() ||
             "MANUALIDAD SECO",
-          tipoPrenda:
-            newFinishForm.tipoPrenda.trim() || "Pantalón Jean Caballero",
+          tipoPrenda: newFinishForm.tipoPrenda.trim(),
           technique:
             newFinishForm.technique.trim() ||
-            "Acabado artesanal en mezclilla",
+            "Acabado artesanal",
         });
         setFinishCatalog((prev) =>
           prev.map((f) => (f.id === editingFinishId ? updated : f))
@@ -1156,11 +1137,10 @@ export default function ProlavtexDispatchApp() {
           label: newFinishForm.label.trim(),
           category:
             newFinishForm.category.trim().toUpperCase() || "MANUALIDAD SECO",
-          tipoPrenda:
-            newFinishForm.tipoPrenda.trim() || "Pantalón Jean Caballero",
+          tipoPrenda: newFinishForm.tipoPrenda.trim(),
           technique:
             newFinishForm.technique.trim() ||
-            "Acabado artesanal manual en mezclilla",
+            "Acabado artesanal manual",
         });
         setFinishCatalog((prev) => [created, ...prev]);
         triggerToast(`Manualidad "${created.label}" añadida a Supabase.`);
@@ -1169,7 +1149,7 @@ export default function ProlavtexDispatchApp() {
       setNewFinishForm({
         label: "",
         category: "MANUALIDAD SECO",
-        tipoPrenda: "Pantalón Jean Caballero",
+        tipoPrenda: "",
         technique: "",
       });
       setEditingFinishId(null);
@@ -1187,7 +1167,7 @@ export default function ProlavtexDispatchApp() {
     setNewFinishForm({
       label: fin.label,
       category: fin.category,
-      tipoPrenda: fin.tipoPrenda || "Pantalón Jean Caballero",
+      tipoPrenda: fin.tipoPrenda || "",
       technique: fin.technique || "",
     });
     setShowNewFinishForm(true);
@@ -1474,10 +1454,10 @@ export default function ProlavtexDispatchApp() {
       items: [
         {
           id: db.ensureUUID(),
-          tipoPrenda: "Pantalón Jean Caballero",
+          tipoPrenda: garmentCatalog[0]?.label || "",
           cantidad: 0,
           lote: `LT-${String(orderCounter).padStart(2, "0")}`,
-          procesos: ["Lavado Enzimático"],
+          procesos: [],
           manualidades: [],
         },
       ],
@@ -1492,10 +1472,10 @@ export default function ProlavtexDispatchApp() {
     const nextIdx = currentOrder.items.length + 1;
     const newItem: DispatchItem = {
       id: db.ensureUUID(),
-      tipoPrenda: "Pantalón Jean Caballero",
-      cantidad: 120,
-      lote: `LT-${880 + nextIdx}-${String.fromCharCode(64 + nextIdx)}`,
-      procesos: ["Lavado Enzimático"],
+      tipoPrenda: garmentCatalog[0]?.label || "",
+      cantidad: 0,
+      lote: `LT-${String(nextIdx).padStart(2, "0")}`,
+      procesos: [],
       manualidades: [],
     };
     setCurrentOrder((prev) => ({
@@ -2154,9 +2134,7 @@ export default function ProlavtexDispatchApp() {
                         setNewProcessForm({
                           label: "",
                           category: "LAVADO",
-                          tipoPrenda:
-                            garmentCatalog[0]?.label ||
-                            "Pantalón Jean Caballero",
+                          tipoPrenda: garmentCatalog[0]?.label || "",
                           description: "",
                         });
                         setShowNewProcessForm(true);
@@ -2174,9 +2152,7 @@ export default function ProlavtexDispatchApp() {
                         setNewFinishForm({
                           label: "",
                           category: "MANUALIDAD SECO",
-                          tipoPrenda:
-                            garmentCatalog[0]?.label ||
-                            "Pantalón Jean Caballero",
+                          tipoPrenda: garmentCatalog[0]?.label || "",
                           technique: "",
                         });
                         setShowNewFinishForm(true);
@@ -2637,9 +2613,7 @@ export default function ProlavtexDispatchApp() {
                         setNewProcessForm({
                           label: "",
                           category: "LAVADO",
-                          tipoPrenda:
-                            garmentCatalog[0]?.label ||
-                            "Pantalón Jean Caballero",
+                          tipoPrenda: garmentCatalog[0]?.label || "",
                           description: "",
                         });
                         setShowNewProcessForm(true);
@@ -2921,9 +2895,7 @@ export default function ProlavtexDispatchApp() {
                         setNewFinishForm({
                           label: "",
                           category: "MANUALIDAD SECO",
-                          tipoPrenda:
-                            garmentCatalog[0]?.label ||
-                            "Pantalón Jean Caballero",
+                          tipoPrenda: garmentCatalog[0]?.label || "",
                           technique: "",
                         });
                         setShowNewFinishForm(true);
@@ -4199,7 +4171,7 @@ export default function ProlavtexDispatchApp() {
                         label: "",
                         category: "LAVADO",
                         tipoPrenda:
-                          garmentCatalog[0]?.label || "Pantalón Jean Caballero",
+                          garmentCatalog[0]?.label || "",
                         description: "",
                       });
                       setShowNewProcessForm(true);
@@ -4313,7 +4285,7 @@ export default function ProlavtexDispatchApp() {
                           </td>
                           <td className="py-5 px-6">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
-                              {proc.tipoPrenda || "PANTALÓN JEAN CABALLERO"}
+                              {proc.tipoPrenda || "GENERAL"}
                             </span>
                           </td>
                           <td className="py-5 px-6">
@@ -4402,7 +4374,7 @@ export default function ProlavtexDispatchApp() {
                         label: "",
                         category: "MANUALIDAD SECO",
                         tipoPrenda:
-                          garmentCatalog[0]?.label || "Pantalón Jean Caballero",
+                          garmentCatalog[0]?.label || "",
                         technique: "",
                       });
                       setShowNewFinishForm(true);
@@ -4516,7 +4488,7 @@ export default function ProlavtexDispatchApp() {
                           </td>
                           <td className="py-5 px-6">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
-                              {fin.tipoPrenda || "PANTALÓN JEAN CABALLERO"}
+                              {fin.tipoPrenda || "GENERAL"}
                             </span>
                           </td>
                           <td className="py-5 px-6">
@@ -5572,7 +5544,7 @@ export default function ProlavtexDispatchApp() {
                     <input
                       type="text"
                       required
-                      placeholder="Ej. Confecciones Denim Andino S.A."
+                      placeholder="Ej. Nombre del Cliente o Razón Social"
                       value={newClientForm.nombre}
                       onChange={(e) =>
                         setNewClientForm((prev) => ({
@@ -6142,7 +6114,7 @@ export default function ProlavtexDispatchApp() {
                     <input
                       type="text"
                       required
-                      placeholder="Ej. CARLOS URIÑA / ISRAEL FLORES"
+                      placeholder="Ej. NOMBRE Y APELLIDO"
                       value={newDispatcherForm.nombre}
                       onChange={(e) =>
                         setNewDispatcherForm((prev) => ({

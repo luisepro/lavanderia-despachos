@@ -9,15 +9,7 @@ import {
   GarmentTypeCatalogItem,
   IndustrialProcessCatalogItem,
 } from "@/types/dispatch";
-import {
-  ARTISAN_FINISHES,
-  DEFAULT_COMPANY_INFO,
-  INITIAL_CLIENTS,
-  INITIAL_DISPATCHERS,
-  INITIAL_GARMENT_TYPES,
-  INITIAL_ORDERS_HISTORY,
-  INDUSTRIAL_PROCESSES,
-} from "@/data/catalogs";
+import { DEFAULT_COMPANY_INFO } from "@/data/catalogs";
 
 // Helper to check valid UUID
 export function isUUID(str?: string | null): boolean {
@@ -708,52 +700,9 @@ export async function deleteOrder(orderId: string): Promise<void> {
 }
 
 // =========================================================================
-// 8. AUTO-INITIALIZATION & SEED SYNC (Si la base de datos está vacía)
+// 8. AUTO-INITIALIZATION (Inicia completamente en blanco, sin datos precargados)
 // =========================================================================
 export async function seedInitialDataIfEmpty(): Promise<boolean> {
-  try {
-    const { count, error } = await supabase
-      .from("clients")
-      .select("*", { count: "exact", head: true });
-
-    if (error) {
-      console.warn("No se pudo verificar contenido de tabla clients:", error);
-      return false;
-    }
-
-    if (count === 0) {
-      // 1. Company
-      await updateCompanyInfo(DEFAULT_COMPANY_INFO).catch(() => {});
-
-      // 2. Dispatchers
-      for (const d of INITIAL_DISPATCHERS) {
-        await createDispatcher(d).catch(() => {});
-      }
-
-      // 3. Garments
-      for (const g of INITIAL_GARMENT_TYPES) {
-        await createGarmentType(g).catch(() => {});
-      }
-
-      // 4. Processes
-      for (const p of INDUSTRIAL_PROCESSES) {
-        await createProcess(p).catch(() => {});
-      }
-
-      // 5. Finishes
-      for (const f of ARTISAN_FINISHES) {
-        await createFinish(f).catch(() => {});
-      }
-
-      // 6. Clients
-      for (const c of INITIAL_CLIENTS) {
-        await createClient(c).catch(() => null);
-      }
-
-      return true;
-    }
-  } catch (err) {
-    console.error("Error durante auto-seed en Supabase:", err);
-  }
+  // Base de datos empieza en blanco por requerimiento
   return false;
 }
