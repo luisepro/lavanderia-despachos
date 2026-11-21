@@ -416,29 +416,7 @@ export default function ProlavtexDispatchApp() {
       sheetName = "Clientes";
       filename = "Plantilla_Clientes.xlsx";
       headers = ["Nombre", "Email", "Telefono", "Direccion", "Estado"];
-      rows = [
-        [
-          "Cliente Ejemplo S.A.",
-          "contacto@cliente.com",
-          "+54 11 1234-5678",
-          "Av. Siempre Viva 123",
-          "Activo",
-        ],
-        [
-          "Confecciones Denim Andino S.A.S.",
-          "pedidos@denimandino.com",
-          "+593 99 812 3456",
-          "Av. Galo Plaza Lasso N52-18",
-          "Activo",
-        ],
-        [
-          "Textiles & Moda Kronos Cia. Ltda.",
-          "ventas@kronos.com",
-          "+593 98 765 4321",
-          "Zona Industrial Pelileo Km 2",
-          "Activo",
-        ],
-      ];
+      rows = [];
       colWidths = [
         { wch: 35 },
         { wch: 28 },
@@ -450,36 +428,7 @@ export default function ProlavtexDispatchApp() {
       sheetName = "Procesos";
       filename = "Plantilla_Procesos.xlsx";
       headers = ["Nombre", "Categoria", "Tipo_Prenda", "Descripcion", "Estado"];
-      rows = [
-        [
-          "Lavado Enzimático",
-          "LAVADO",
-          "Pantalón Jean Caballero",
-          "Bio-pulido y desgaste controlado en prenda de mezclilla",
-          "Activo",
-        ],
-        [
-          "Deslavado (Stone Wash)",
-          "LAVADO PESADO",
-          "Chaqueta Denim (Trucker)",
-          "Abrasión física en tambor industrial para efecto vintage",
-          "Activo",
-        ],
-        [
-          "Neutralizado",
-          "QUÍMICO",
-          "Todas las Prendas Denim",
-          "Eliminación de residuales oxidantes y estabilización de pH",
-          "Activo",
-        ],
-        [
-          "Suavizado Siliconado",
-          "ACABADO",
-          "Pantalón Jean Dama",
-          "Aplicación de micro-emulsión para tacto extra suave",
-          "Activo",
-        ],
-      ];
+      rows = [];
       colWidths = [
         { wch: 28 },
         { wch: 18 },
@@ -491,36 +440,7 @@ export default function ProlavtexDispatchApp() {
       sheetName = "Manualidades";
       filename = "Plantilla_Manualidades.xlsx";
       headers = ["Nombre", "Categoria", "Tipo_Prenda", "Descripcion", "Estado"];
-      rows = [
-        [
-          "Bigotes (Whiskers)",
-          "MANUALIDAD SECO",
-          "Pantalón Jean Caballero",
-          "Marcado con molde polimérico y lija grano 220",
-          "Activo",
-        ],
-        [
-          "Lijado Localizado",
-          "MANUALIDAD SECO",
-          "Pantalón Jean Dama",
-          "Desgaste manual en muslos con maniquí neumático",
-          "Activo",
-        ],
-        [
-          "Roturas / Grinding",
-          "DESGASTE",
-          "Short de Mezclilla",
-          "Esmerilado artesanal en bordes de bolsillos y bota",
-          "Activo",
-        ],
-        [
-          "Focalizado (Spray PP)",
-          "QUÍMICO LOCAL",
-          "Pantalón Jean Caballero",
-          "Nebulización localizada en cabina para reserva de luz",
-          "Activo",
-        ],
-      ];
+      rows = [];
       colWidths = [
         { wch: 28 },
         { wch: 20 },
@@ -532,29 +452,7 @@ export default function ProlavtexDispatchApp() {
       sheetName = "Encargados";
       filename = "Plantilla_Encargados.xlsx";
       headers = ["Nombre", "Cargo", "Telefono", "Email", "Estado"];
-      rows = [
-        [
-          "ENCARGADO PLANTA",
-          "BODEGUERO",
-          "+593 99 123 4501",
-          "bodega@prolavtex.com",
-          "Activo",
-        ],
-        [
-          "SUPERVISOR DE TURNO",
-          "FROSTEADOR",
-          "+593 99 123 4502",
-          "turno@prolavtex.com",
-          "Activo",
-        ],
-        [
-          "OPERADOR DE SECADO",
-          "SECADOR",
-          "+593 99 123 4504",
-          "secado@prolavtex.com",
-          "Activo",
-        ],
-      ];
+      rows = [];
       colWidths = [
         { wch: 28 },
         { wch: 20 },
@@ -566,36 +464,7 @@ export default function ProlavtexDispatchApp() {
       sheetName = "Prendas";
       filename = "Plantilla_Tipos_Prenda.xlsx";
       headers = ["Nombre", "Categoria", "Tejido_Base", "Descripcion", "Estado"];
-      rows = [
-        [
-          "Pantalón Jean Caballero",
-          "DENIM PESADO",
-          "Mezclilla Índigo 12oz - 14oz",
-          "Corte clásico 5 bolsillos corte recto",
-          "Activo",
-        ],
-        [
-          "Pantalón Jean Dama",
-          "DENIM STRETCH",
-          "Mezclilla Stretch 9oz - 11oz",
-          "Mezclilla con elastano corte skinny",
-          "Activo",
-        ],
-        [
-          "Chaqueta Denim (Trucker)",
-          "DENIM SUPERIOR",
-          "Mezclilla Rígida 13oz",
-          "Casaca clásica estructurada con botones metálicos",
-          "Activo",
-        ],
-        [
-          "Short de Mezclilla",
-          "DENIM VERANO",
-          "Mezclilla Algodón 10oz",
-          "Bermuda y short denim dama y caballero",
-          "Activo",
-        ],
-      ];
+      rows = [];
       colWidths = [
         { wch: 28 },
         { wch: 18 },
@@ -714,7 +583,7 @@ export default function ProlavtexDispatchApp() {
           const tipoPrenda =
             prendaIdx >= 0 && cols[prendaIdx]
               ? cols[prendaIdx]
-              : "Pantalón Jean Caballero";
+              : "GENERAL";
           const description =
             descIdx >= 0 && cols[descIdx]
               ? cols[descIdx]
@@ -748,7 +617,7 @@ export default function ProlavtexDispatchApp() {
           const tipoPrenda =
             prendaIdx >= 0 && cols[prendaIdx]
               ? cols[prendaIdx]
-              : "Pantalón Jean Caballero";
+              : "GENERAL";
           const technique =
             descIdx >= 0 && cols[descIdx] ? cols[descIdx] : "Acabado artesanal";
 
@@ -2340,7 +2209,7 @@ export default function ProlavtexDispatchApp() {
                   <div className="min-w-0">
                     <div className="text-[15px] font-extrabold text-slate-900 uppercase truncate leading-tight">
                       {dashboardAnalytics.topProcesses[0]?.label ||
-                        "LAVADO ENZIMÁTICO"}
+                        "SIN PROCESOS"}
                     </div>
                     <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-1.5">
                       {dashboardAnalytics.topProcesses[0]?.prendas.toLocaleString(
@@ -5564,7 +5433,7 @@ export default function ProlavtexDispatchApp() {
                       <input
                         type="text"
                         required
-                        placeholder="1791402981001"
+                        placeholder="Ej. RUC o Cédula"
                         value={newClientForm.rucCedula}
                         onChange={(e) =>
                           setNewClientForm((prev) => ({
@@ -5684,7 +5553,7 @@ export default function ProlavtexDispatchApp() {
                     <input
                       type="text"
                       required
-                      placeholder="Ej. Lavado Enzimático / Deslavado"
+                      placeholder="Ej. Nombre del proceso industrial"
                       value={newProcessForm.label}
                       onChange={(e) =>
                         setNewProcessForm((prev) => ({
@@ -5972,7 +5841,7 @@ export default function ProlavtexDispatchApp() {
                     <input
                       type="text"
                       required
-                      placeholder="Ej. Pantalón Jean Caballero / Chaqueta Denim"
+                      placeholder="Ej. Nombre del tipo de prenda"
                       value={newGarmentForm.label}
                       onChange={(e) =>
                         setNewGarmentForm((prev) => ({

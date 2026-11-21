@@ -11,14 +11,13 @@ import {
 export const INITIAL_DISPATCHERS: DispatcherCatalogItem[] = [];
 
 export const DEFAULT_COMPANY_INFO: CompanyInfo = {
-  nombre: "PROLAVTEX LAVANDERÍA INDUSTRIAL S.A.",
-  subtitulo:
-    "Diseño y Gestión de Procesos Maestros en Mezclilla, Tintorería y Acabados Textiles",
+  nombre: "PROLAVTEX",
+  subtitulo: "",
   ruc: "",
   direccion: "",
   telefono: "",
   email: "",
-  planta: "PLANTA CENTRAL",
+  planta: "",
 };
 
 export const INITIAL_GARMENT_TYPES: GarmentTypeCatalogItem[] = [];
